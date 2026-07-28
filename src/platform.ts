@@ -73,14 +73,41 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     }
 
     this.api.on('didFinishLaunching', () => {
-      this.discoverDevices().catch((err) => {
-        this.log.error('Device discovery failed: %s', String(err));
-        this.log.error(
-          'Check that petkit-bridge is reachable at %s and the token is correct.',
-          bridgeUrl,
-        );
-      });
+      this.tryDiscover(0);
     });
+  }
+
+  /**
+   * Runs discovery, retrying with exponential backoff (30s, 60s, 120s,
+   * 240s, then every 5 minutes) until the bridge answers. This makes the
+   * plugin resilient to boot-order races (e.g. after a power outage,
+   * Homebridge often starts before the machine running petkit-bridge):
+   * instead of giving up until a manual restart, the accessories appear
+   * as soon as the bridge is back.
+   */
+  private tryDiscover(attempt: number): void {
+    this.discoverDevices()
+      .then(() => {
+        if (attempt > 0) {
+          this.log.info(
+            'Discovery succeeded after %d retr%s.',
+            attempt,
+            attempt === 1 ? 'y' : 'ies',
+          );
+        }
+      })
+      .catch((err) => {
+        const delaySecs = Math.min(30 * 2 ** Math.min(attempt, 4), 300);
+        this.log.error('Device discovery failed: %s', String(err));
+        this.log.warn(
+          'Check that petkit-bridge is reachable at %s and the token is correct. ' +
+            'Retrying in %ds (attempt %d)...',
+          this.config.bridgeUrl,
+          delaySecs,
+          attempt + 1,
+        );
+        setTimeout(() => this.tryDiscover(attempt + 1), delaySecs * 1000);
+      });
   }
 
   /** Called by Homebridge for each accessory restored from disk cache. */

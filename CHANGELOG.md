@@ -3,6 +3,17 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.2] - 2026-07-28
+
+### Added
+- **Discovery retry with exponential backoff** (30s → 60s → 120s → 240s,
+  then every 5 minutes): if petkit-bridge is unreachable when Homebridge
+  starts (e.g. boot-order race after a power outage), the plugin no longer
+  gives up until a manual restart — accessories appear as soon as the
+  bridge is back. Completes the end-to-end self-healing design: the bridge
+  already recovers its cloud session on its own; now the plugin recovers
+  its connection to the bridge on its own too.
+
 ## [0.2.1] - 2026-07-28
 
 Compliance fixes for the Homebridge verification automated checks
