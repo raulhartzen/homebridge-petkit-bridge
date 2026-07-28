@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-07-28
+
+Compliance fixes for the Homebridge verification automated checks
+(no functional changes).
+
+### Fixed
+- `package.json`: added the `supports-hap` keyword (transport declaration).
+- `config.schema.json`: `required` is now a proper JSON Schema array at the
+  object level instead of boolean flags on individual fields.
+- `config.schema.json`: added the standard `name` platform property.
+- Reworded the token field description (documentation-only change).
+
 ## [0.2.0] - 2026-07-28
 
 **Status promoted from alpha to beta** — all features field-tested on real

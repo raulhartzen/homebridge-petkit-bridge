@@ -6,18 +6,22 @@
   "schema": {
     "type": "object",
     "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "PetKit Bridge",
+        "description": "Name of this platform instance, shown in the Homebridge UI and logs."
+      },
       "bridgeUrl": {
         "title": "Bridge URL",
         "type": "string",
-        "required": true,
         "placeholder": "http://192.168.1.10:8787",
         "description": "Base URL of your petkit-bridge instance."
       },
       "token": {
         "title": "Bridge token",
         "type": "string",
-        "required": true,
-        "description": "The BRIDGE_TOKEN configured in your petkit-bridge .env."
+        "description": "The BRIDGE_TOKEN value you set when deploying petkit-bridge (however you provided its configuration)."
       },
       "pollInterval": {
         "title": "Poll interval (seconds)",
@@ -40,6 +44,11 @@
         "maximum": 300,
         "description": "How long the bridge waits before ending a cleaning (scoop) cycle. Leave empty to use the bridge default (~50s, tuned on the Puramax 2)."
       }
-    }
+    },
+    "required": [
+      "name",
+      "bridgeUrl",
+      "token"
+    ]
   }
 }
