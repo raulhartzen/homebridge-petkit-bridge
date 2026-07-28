@@ -7,7 +7,7 @@
   <a href="https://www.npmjs.com/package/homebridge-petkit-bridge"><img src="https://img.shields.io/npm/dm/homebridge-petkit-bridge" alt="npm downloads"></a>
   <img src="https://img.shields.io/badge/works%20with-Homebridge-6f42c1" alt="Works with Homebridge">
   <img src="https://img.shields.io/badge/Apple-HomeKit-0b84fe" alt="Apple HomeKit">
-  <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status alpha">
+  <img src="https://img.shields.io/badge/status-beta-blue" alt="Status beta">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License">
 </p>
 
@@ -15,7 +15,7 @@
 
 Homebridge plugin for [petkit-bridge](https://github.com/raulhartzen/petkit-bridge): brings PetKit feeders, litter boxes and water fountains into Apple HomeKit — accessories are discovered and created automatically.
 
-> **Status: alpha.** The plugin compiles and follows the standard Homebridge dynamic-platform API, but has not yet been battle-tested. Try it, and open an issue if something misbehaves.
+> **Status: beta.** Field-tested on real hardware — Yumshare (dual hopper) feeders, a Puramax 2 litter box and Eversweet Max fountains. Open an issue if something misbehaves with your devices.
 
 ## How it works
 
