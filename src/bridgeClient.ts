@@ -25,8 +25,12 @@ export class BridgeClient {
     private readonly token: string,
     private readonly timeoutMs = 10000,
   ) {
-    // Normalize: no trailing slash.
-    this.baseUrl = baseUrl.replace(/\/+$/, '');
+    // Be lenient: add the scheme if missing, drop trailing slashes.
+    let url = baseUrl.trim().replace(/\/+$/, '');
+    if (url && !/^https?:\/\//i.test(url)) {
+      url = `http://${url}`;
+    }
+    this.baseUrl = url;
   }
 
   private async request<T>(

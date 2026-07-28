@@ -15,13 +15,15 @@ import { LitterAccessory } from './accessories/litter';
 import { FountainAccessory } from './accessories/fountain';
 
 /**
- * Device-type classification. Type strings come from the bridge's /devices
- * endpoint (pypetkitapi device types). Extend these sets to support more
- * models; unknown types are skipped with a log line.
+ * Device-type classification. The bridge's /devices endpoint reports
+ * category strings ("feeder", "litter", "waterfountain", ...) — verified
+ * in the field on petkit-bridge 1.x. Model codes are kept as a fallback.
+ * Non-controllable entries (pets, purifiers) are ignored quietly.
  */
-const FEEDER_TYPES = new Set(['d3', 'd4', 'd4h', 'd4s', 'd4sh', 'feeder', 'feedermini']);
-const LITTER_TYPES = new Set(['t3', 't4', 't5', 't6', 't7']);
-const FOUNTAIN_TYPES = new Set(['ctw2', 'ctw3', 'w5']);
+const FEEDER_TYPES = new Set(['feeder', 'feedermini', 'd3', 'd4', 'd4h', 'd4s', 'd4sh']);
+const LITTER_TYPES = new Set(['litter', 'litterbox', 't3', 't4', 't5', 't6', 't7']);
+const FOUNTAIN_TYPES = new Set(['waterfountain', 'fountain', 'ctw2', 'ctw3', 'w5']);
+const IGNORED_TYPES = new Set(['pet', 'purifier']);
 
 export interface PetkitBridgeConfig extends PlatformConfig {
   bridgeUrl?: string;
@@ -103,6 +105,12 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   private setupDevice(device: BridgeDevice): void {
     const type = String(device.type ?? '').toLowerCase();
     const name = device.name || `PetKit ${device.id}`;
+
+    if (IGNORED_TYPES.has(type)) {
+      this.log.debug('Ignoring "%s" (type "%s": not a controllable device)', name, type);
+      return;
+    }
+
     const uuid = this.api.hap.uuid.generate(`petkit-bridge:${device.id}`);
     this.seen.add(uuid);
 
