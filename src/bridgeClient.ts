@@ -99,9 +99,23 @@ export class BridgeClient {
     await this.request('POST', `/device/${id}/feed`, { amount });
   }
 
-  /** POST /device/{id}/clean — start a cleaning cycle. */
+  /** POST /device/{id}/clean — start a cleaning cycle (START only; may not stop on its own). */
   async clean(id: number | string): Promise<void> {
     await this.request('POST', `/device/${id}/clean`, { mode: 'CLEANING' });
+  }
+
+  /**
+   * POST /device/{id}/scoop — run ONE complete scooping cycle: the bridge
+   * sends START, waits (~50s by default, tuned on the Puramax 2), then
+   * sends END from a background task. This is the right call for a
+   * momentary "Clean" button: unlike /clean, the cycle stops on its own.
+   */
+  async scoop(id: number | string, wait?: number): Promise<void> {
+    await this.request(
+      'POST',
+      `/device/${id}/scoop`,
+      wait !== undefined ? { wait } : {},
+    );
   }
 
   /** POST /device/{id}/litter — flexible action/mode control. */

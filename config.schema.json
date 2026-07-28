@@ -29,9 +29,16 @@
       "feedAmount": {
         "title": "Feed amount",
         "type": "integer",
-        "default": 1,
+        "default": 10,
         "minimum": 1,
-        "description": "Portions dispensed when the Feed switch is triggered."
+        "description": "Amount dispensed by the Feed switch. Model-specific: e.g. the d4h (Yumshare) accepts 10, 20, 30, 40 or 50. If invalid, the plugin retries once with the smallest value the bridge reports."
+      },
+      "scoopWait": {
+        "title": "Scoop cycle duration (seconds)",
+        "type": "integer",
+        "minimum": 5,
+        "maximum": 300,
+        "description": "How long the bridge waits before ending a cleaning (scoop) cycle. Leave empty to use the bridge default (~50s, tuned on the Puramax 2)."
       }
     }
   }

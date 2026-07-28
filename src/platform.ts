@@ -30,6 +30,7 @@ export interface PetkitBridgeConfig extends PlatformConfig {
   token?: string;
   pollInterval?: number;
   feedAmount?: number;
+  scoopWait?: number;
 }
 
 export class PetkitBridgePlatform implements DynamicPlatformPlugin {
@@ -38,6 +39,7 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   public readonly client: BridgeClient;
   public readonly pollInterval: number;
   public readonly feedAmount: number;
+  public readonly scoopWait: number | undefined;
 
   /** Accessories restored from cache, keyed by UUID. */
   private readonly cached = new Map<string, PlatformAccessory>();
@@ -55,7 +57,12 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     const bridgeUrl = config.bridgeUrl ?? '';
     const token = config.token ?? '';
     this.pollInterval = Math.max(15, Number(config.pollInterval ?? 60));
-    this.feedAmount = Math.max(1, Number(config.feedAmount ?? 1));
+    // Default 10: the smallest amount accepted by common PetKit feeders
+    // (e.g. d4h validates against [10, 20, 30, 40, 50]).
+    this.feedAmount = Math.max(1, Number(config.feedAmount ?? 10));
+    // Seconds the bridge waits before ending a scoop cycle; undefined
+    // means "use the bridge default" (~50s, tuned on the Puramax 2).
+    this.scoopWait = config.scoopWait !== undefined ? Number(config.scoopWait) : undefined;
     this.client = new BridgeClient(bridgeUrl, token);
 
     if (!bridgeUrl || !token) {

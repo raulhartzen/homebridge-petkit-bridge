@@ -28,6 +28,11 @@ export class LitterAccessory {
     const cleanSwitch =
       accessory.getService('Clean') ||
       accessory.addService(Service.Switch, 'Clean', 'clean');
+    // Explicit display name: without ConfiguredName, recent iOS versions
+    // fall back to the accessory name for every service, making the two
+    // switches indistinguishable in the Home app.
+    cleanSwitch.setCharacteristic(Characteristic.Name, 'Clean');
+    cleanSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Clean');
 
     cleanSwitch
       .getCharacteristic(Characteristic.On)
@@ -37,11 +42,16 @@ export class LitterAccessory {
           return;
         }
         try {
-          await this.platform.client.clean(device.id);
-          this.platform.log.info('[%s] cleaning cycle started', accessory.displayName);
+          // /scoop runs a full self-terminating cycle (START, wait, END).
+          // Plain /clean only sends START and the litter box never stops.
+          await this.platform.client.scoop(device.id, this.platform.scoopWait);
+          this.platform.log.info(
+            '[%s] scoop cycle started (will stop on its own)',
+            accessory.displayName,
+          );
         } catch (err) {
           this.platform.log.error(
-            '[%s] clean failed: %s',
+            '[%s] scoop failed: %s',
             accessory.displayName,
             String(err),
           );
@@ -59,6 +69,8 @@ export class LitterAccessory {
     const maintSwitch =
       accessory.getService('Maintenance') ||
       accessory.addService(Service.Switch, 'Maintenance', 'maintenance');
+    maintSwitch.setCharacteristic(Characteristic.Name, 'Maintenance');
+    maintSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Maintenance');
 
     maintSwitch
       .getCharacteristic(Characteristic.On)
