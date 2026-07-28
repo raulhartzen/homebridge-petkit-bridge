@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/raulhartzen/homebridge-petkit-bridge@main/assets/banner.svg" alt="homebridge-petkit-bridge — petkit-bridge to Apple HomeKit" width="820">
+  <img src="https://raw.githubusercontent.com/raulhartzen/homebridge-petkit-bridge/main/assets/banner.png" alt="homebridge-petkit-bridge — petkit-bridge to Apple HomeKit" width="820">
 </p>
 
 <p align="center">
