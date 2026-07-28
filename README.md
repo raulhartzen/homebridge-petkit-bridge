@@ -49,10 +49,11 @@ Via the Homebridge UI (recommended), or manually in `config.json`:
   "platforms": [
     {
       "platform": "PetkitBridge",
+      "name": "PetKit Bridge",
       "bridgeUrl": "http://192.168.1.10:8787",
       "token": "YOUR_BRIDGE_TOKEN",
       "pollInterval": 60,
-      "feedAmount": 1
+      "feedAmount": 10
     }
   ]
 }
