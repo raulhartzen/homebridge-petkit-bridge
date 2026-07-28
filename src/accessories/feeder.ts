@@ -25,6 +25,7 @@ export class FeederAccessory {
       accessory.getService('Feed') ||
       accessory.addService(Service.Switch, 'Feed', 'feed');
     feedSwitch.setCharacteristic(Characteristic.Name, 'Feed');
+    feedSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
     feedSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Feed');
 
     feedSwitch

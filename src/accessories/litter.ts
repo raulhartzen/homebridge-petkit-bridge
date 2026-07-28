@@ -8,8 +8,12 @@ import { PetkitBridgePlatform } from '../platform';
  *    read from the bridge's /maint-status endpoint (polled on demand and
  *    on an interval so automations stay in sync).
  */
+/** After a manual command, skip polling sync while the device settles. */
+const MAINT_SYNC_GRACE_MS = 90_000;
+
 export class LitterAccessory {
   private maintenanceOn = false;
+  private lastCommandAt = 0;
 
   constructor(
     private readonly platform: PetkitBridgePlatform,
@@ -32,6 +36,7 @@ export class LitterAccessory {
     // fall back to the accessory name for every service, making the two
     // switches indistinguishable in the Home app.
     cleanSwitch.setCharacteristic(Characteristic.Name, 'Clean');
+    cleanSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
     cleanSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Clean');
 
     cleanSwitch
@@ -45,9 +50,11 @@ export class LitterAccessory {
           // /scoop runs a full self-terminating cycle (START, wait, END).
           // Plain /clean only sends START and the litter box never stops.
           await this.platform.client.scoop(device.id, this.platform.scoopWait);
+          const waitSecs = this.platform.scoopWait ?? 50;
           this.platform.log.info(
-            '[%s] scoop cycle started (will stop on its own)',
+            '[%s] scoop cycle started (will stop on its own in ~%ds)',
             accessory.displayName,
+            waitSecs,
           );
         } catch (err) {
           this.platform.log.error(
@@ -70,22 +77,35 @@ export class LitterAccessory {
       accessory.getService('Maintenance') ||
       accessory.addService(Service.Switch, 'Maintenance', 'maintenance');
     maintSwitch.setCharacteristic(Characteristic.Name, 'Maintenance');
+    maintSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
     maintSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Maintenance');
 
     maintSwitch
       .getCharacteristic(Characteristic.On)
       .onGet(() => this.maintenanceOn)
       .onSet(async (value) => {
-        const action = value ? 'START' : 'END';
+        const target = Boolean(value);
+        const action = target ? 'START' : 'END';
+        // Optimistic update: reflect the requested state immediately, so
+        // the Home app doesn't read a stale "off" while the bridge call
+        // is in flight (which made the switch look momentary and led to
+        // double-START "Device in operation" errors).
+        const previous = this.maintenanceOn;
+        this.maintenanceOn = target;
+        this.lastCommandAt = Date.now();
         try {
           await this.platform.client.litter(device.id, action, 'MAINTENANCE');
-          this.maintenanceOn = Boolean(value);
           this.platform.log.info(
             '[%s] maintenance %s',
             accessory.displayName,
-            value ? 'entered' : 'exited',
+            target ? 'entered' : 'exited',
           );
         } catch (err) {
+          // Revert the optimistic state.
+          this.maintenanceOn = previous;
+          setTimeout(() => {
+            maintSwitch.updateCharacteristic(Characteristic.On, previous);
+          }, 500);
           this.platform.log.error(
             '[%s] maintenance %s failed: %s',
             accessory.displayName,
@@ -100,6 +120,12 @@ export class LitterAccessory {
 
     // Keep the maintenance state in sync with reality.
     const poll = async () => {
+      // Right after a manual command the device takes a while to report
+      // its new mode; syncing during that window would flip the switch
+      // back prematurely. Give it time to settle.
+      if (Date.now() - this.lastCommandAt < MAINT_SYNC_GRACE_MS) {
+        return;
+      }
       try {
         const on = await this.platform.client.getMaintStatus(device.id);
         if (on !== this.maintenanceOn) {

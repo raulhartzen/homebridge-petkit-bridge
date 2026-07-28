@@ -1,7 +1,7 @@
 {
   "name": "homebridge-petkit-bridge",
   "displayName": "PetKit Bridge",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Homebridge plugin for petkit-bridge: exposes PetKit feeders, litter boxes and fountains to Apple HomeKit via the local petkit-bridge HTTP API.",
   "license": "MIT",
   "author": "raulhartzen",

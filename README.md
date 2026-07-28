@@ -63,7 +63,10 @@ Via the Homebridge UI (recommended), or manually in `config.json`:
 | `bridgeUrl` | — | Base URL of your petkit-bridge instance |
 | `token` | — | The `BRIDGE_TOKEN` from your bridge's `.env` |
 | `pollInterval` | `60` | Seconds between state refreshes (min 15) |
-| `feedAmount` | `1` | Portions dispensed by the Feed switch |
+| `feedAmount` | `10` | Amount dispensed by the Feed switch (model-specific: e.g. d4h accepts 10–50) |
+| `scoopWait` | *(bridge default)* | Seconds before the bridge ends a scoop cycle (~50s default) |
+
+> **Where do I find my token?** It's whatever you set as `BRIDGE_TOKEN` when you deployed [petkit-bridge](https://github.com/raulhartzen/petkit-bridge) — however you provided its environment variables. With the standard docker-compose setup that's the `.env` file next to the compose file, so on the machine running the bridge: `grep BRIDGE_TOKEN .env`. If you deployed differently (plain environment variables, another orchestrator), check wherever you defined them.
 
 ## Development
 
