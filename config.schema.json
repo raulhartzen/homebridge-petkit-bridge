@@ -1,0 +1,38 @@
+{
+  "pluginAlias": "PetkitBridge",
+  "pluginType": "platform",
+  "singular": true,
+  "headerDisplay": "Companion plugin for [petkit-bridge](https://github.com/raulhartzen/petkit-bridge). Run the bridge first, then point this plugin at it.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "bridgeUrl": {
+        "title": "Bridge URL",
+        "type": "string",
+        "required": true,
+        "placeholder": "http://192.168.1.10:8787",
+        "description": "Base URL of your petkit-bridge instance."
+      },
+      "token": {
+        "title": "Bridge token",
+        "type": "string",
+        "required": true,
+        "description": "The BRIDGE_TOKEN configured in your petkit-bridge .env."
+      },
+      "pollInterval": {
+        "title": "Poll interval (seconds)",
+        "type": "integer",
+        "default": 60,
+        "minimum": 15,
+        "description": "How often to refresh fountain state and litter maintenance status."
+      },
+      "feedAmount": {
+        "title": "Feed amount",
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "description": "Portions dispensed when the Feed switch is triggered."
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="300" viewBox="0 0 960 300" role="img" aria-label="homebridge-petkit-bridge: petkit-bridge to Apple HomeKit">
+  <!-- background -->
+  <rect width="960" height="300" rx="14" fill="#113C46"/>
+
+  <!-- title -->
+  <text x="480" y="92" text-anchor="middle"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="40" font-weight="700" fill="#F4EDE0" letter-spacing="1">homebridge-petkit-bridge</text>
+  <text x="480" y="126" text-anchor="middle"
+        font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="16" fill="#8FB2B8" letter-spacing="2">petkit-bridge &#8594; Apple HomeKit &#183; auto-discovered accessories</text>
+
+  <!-- bridge server box (left) -->
+  <g transform="translate(150,182)" stroke="#F4EDE0" stroke-width="3.5" fill="none"
+     stroke-linejoin="round" stroke-linecap="round">
+    <rect x="0" y="0" width="76" height="26" rx="6"/>
+    <rect x="0" y="34" width="76" height="26" rx="6"/>
+    <circle cx="14" cy="13" r="2.5" fill="#F0B34C" stroke="none"/>
+    <circle cx="14" cy="47" r="2.5" fill="#F0B34C" stroke="none"/>
+    <line x1="30" y1="13" x2="62" y2="13"/>
+    <line x1="30" y1="47" x2="62" y2="47"/>
+  </g>
+
+  <!-- house (right) -->
+  <g transform="translate(700,168)" stroke="#F4EDE0" stroke-width="3.5" fill="none"
+     stroke-linejoin="round" stroke-linecap="round">
+    <path d="M -2 34 L 32 0 L 66 34"/>
+    <path d="M 7 27 V 62 H 57 V 27"/>
+    <rect x="26" y="40" width="12" height="12" fill="#F0B34C" stroke="none"/>
+  </g>
+
+  <!-- connection line: server -> house, gentle arch -->
+  <path d="M 234 224 Q 470 186 696 224" stroke="#F4EDE0" stroke-width="3.5"
+        fill="none" stroke-linecap="round"/>
+
+  <!-- data packets on the line -->
+  <circle cx="330" cy="211" r="4.5" fill="#F0B34C"/>
+  <circle cx="450" cy="205" r="4.5" fill="#F0B34C"/>
+  <circle cx="580" cy="207" r="4.5" fill="#F0B34C"/>
+
+  <!-- cat arrived: sitting on the roof of the house -->
+  <g transform="translate(732,168)" fill="#F4EDE0">
+    <!-- tail -->
+    <path d="M 10 -5 q 14 3 12 -15" stroke="#F4EDE0" stroke-width="3.2"
+          fill="none" stroke-linecap="round"/>
+    <!-- body -->
+    <ellipse cx="0" cy="-13" rx="11" ry="13.5"/>
+    <!-- head -->
+    <circle cx="0" cy="-31" r="8.5"/>
+    <!-- ears -->
+    <path d="M -7.5 -34.5 L -6.2 -44.5 L -1.3 -37.8 Z"/>
+    <path d="M 7.5 -34.5 L 6.2 -44.5 L 1.3 -37.8 Z"/>
+  </g>
+</svg>

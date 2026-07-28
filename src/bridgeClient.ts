@@ -1,0 +1,111 @@
+/**
+ * Thin HTTP client for the petkit-bridge local API.
+ * https://github.com/raulhartzen/petkit-bridge
+ *
+ * Uses the global fetch available in Node.js 18+.
+ */
+
+export interface BridgeDevice {
+  id: number | string;
+  name?: string;
+  type?: string;
+}
+
+export interface FountainHkState {
+  LeakDetected?: number;
+  BatteryLevel?: number;
+  LowBattery?: number;
+  StatusFault?: number;
+  PowerOn?: number;
+}
+
+export class BridgeClient {
+  constructor(
+    private readonly baseUrl: string,
+    private readonly token: string,
+    private readonly timeoutMs = 10000,
+  ) {
+    // Normalize: no trailing slash.
+    this.baseUrl = baseUrl.replace(/\/+$/, '');
+  }
+
+  private async request<T>(
+    method: 'GET' | 'POST',
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        headers: {
+          'X-Auth-Token': this.token,
+          ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+        },
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`bridge ${method} ${path} -> HTTP ${res.status} ${text}`);
+      }
+      const contentType = res.headers.get('content-type') ?? '';
+      if (contentType.includes('application/json')) {
+        return (await res.json()) as T;
+      }
+      return (await res.text()) as unknown as T;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /** GET /devices — list of discovered devices. */
+  async getDevices(): Promise<BridgeDevice[]> {
+    const data = await this.request<unknown>('GET', '/devices');
+    // The bridge may return either a bare array or an object wrapping it;
+    // accept both shapes defensively.
+    if (Array.isArray(data)) {
+      return data as BridgeDevice[];
+    }
+    if (data && typeof data === 'object') {
+      const obj = data as Record<string, unknown>;
+      for (const key of ['devices', 'items', 'result']) {
+        if (Array.isArray(obj[key])) {
+          return obj[key] as BridgeDevice[];
+        }
+      }
+    }
+    throw new Error('unexpected /devices response shape');
+  }
+
+  /** GET /device/{id}/hk-state — fountain state in HomeKit-friendly format. */
+  async getFountainHkState(id: number | string): Promise<FountainHkState> {
+    return this.request<FountainHkState>('GET', `/device/${id}/hk-state`);
+  }
+
+  /** GET /device/{id}/maint-status — '1' if in maintenance, '0' otherwise. */
+  async getMaintStatus(id: number | string): Promise<boolean> {
+    const text = await this.request<string>('GET', `/device/${id}/maint-status`);
+    return String(text).trim() === '1';
+  }
+
+  /** POST /device/{id}/feed — dispense food. */
+  async feed(id: number | string, amount: number): Promise<void> {
+    await this.request('POST', `/device/${id}/feed`, { amount });
+  }
+
+  /** POST /device/{id}/clean — start a cleaning cycle. */
+  async clean(id: number | string): Promise<void> {
+    await this.request('POST', `/device/${id}/clean`, { mode: 'CLEANING' });
+  }
+
+  /** POST /device/{id}/litter — flexible action/mode control. */
+  async litter(
+    id: number | string,
+    action: string,
+    mode: string,
+  ): Promise<void> {
+    await this.request('POST', `/device/${id}/litter`, { action, mode });
+  }
+}
