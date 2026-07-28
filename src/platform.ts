@@ -164,7 +164,8 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     } else {
       this.log.warn(
         'Device "%s" has unsupported type "%s" — skipped. ' +
-          'Open an issue with the output of /device/%s to add support.',
+          'Open an issue with the output of /device/%s to add support ' +
+          '(redact serial numbers, MAC addresses and Wi-Fi fields before posting).',
         name,
         type || '(none)',
         device.id,
