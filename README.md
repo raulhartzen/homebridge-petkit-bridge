@@ -24,6 +24,8 @@ This plugin does **not** talk to the PetKit cloud. It talks to your local [petki
 - **Feeders** → a momentary "Feed" switch (turn on to dispense; usable in automations and Siri)
 - **Litter boxes** → a momentary "Clean" switch plus a stateful "Maintenance" switch kept in sync with the real device state
 - **Fountains** → a Leak Sensor (fires when water is low) and a Battery service (level + low-battery alert)
+- **Pets** → a Motion Sensor per pet that fires when that pet uses the litter box (visit weight in the log) — build automations like "notify me when Milù uses the litter box"
+- **Camera feeders** → a "Meal" Motion Sensor fired when an eating session is detected
 
 Unsupported device types are skipped with a log line — open an issue with your device's raw dump to add support.
 
@@ -71,6 +73,10 @@ Via the Homebridge UI (recommended), or manually in `config.json`:
 | `maintenanceName` | `Maintenance` | Display name of the litter maintenance switch (e.g. `Manutenzione`) |
 | `enableFeedAll` | `true` | Adds a single switch that dispenses on **all** feeders at once (created only when 2+ feeders are discovered) |
 | `feedAllName` | `Feed All` | Display name of the Feed All switch (e.g. `Eroga cibo`) |
+| `enablePetSensors` | `true` | Motion Sensor per pet, fired on litter-box visits (weight logged) — perfect for notifications/automations |
+| `enableMealSensors` | `true` | Motion Sensor on camera feeders, fired when an eating session is detected |
+| `mealSensorName` | `Meal` | Display name of the meal sensor (e.g. `Pasto`) |
+| `motionResetSeconds` | `30` | How long activity/meal sensors stay triggered |
 
 > **Where do I find my token?** It's whatever you set as `BRIDGE_TOKEN` when you deployed [petkit-bridge](https://github.com/raulhartzen/petkit-bridge) — however you provided its environment variables. With the standard docker-compose setup that's the `.env` file next to the compose file, so on the machine running the bridge: `grep BRIDGE_TOKEN .env`. If you deployed differently (plain environment variables, another orchestrator), check wherever you defined them.
 

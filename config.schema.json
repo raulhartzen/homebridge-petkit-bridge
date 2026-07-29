@@ -73,6 +73,31 @@
         "type": "string",
         "placeholder": "Feed All",
         "description": "Display name of the Feed All switch — what the Home app shows and Siri responds to (e.g. 'Eroga cibo'). Leave empty for 'Feed All'."
+      },
+      "enablePetSensors": {
+        "title": "Pet activity sensors",
+        "type": "boolean",
+        "default": true,
+        "description": "Creates a Motion Sensor per pet (named after your pets in the PetKit app): it fires when that pet uses the litter box — great for Home app notifications and automations. Not intrusive: sensors live in the status row, not among controls."
+      },
+      "enableMealSensors": {
+        "title": "Meal sensors on feeders",
+        "type": "boolean",
+        "default": true,
+        "description": "Adds a Motion Sensor to each camera feeder that fires when an eating session is detected."
+      },
+      "mealSensorName": {
+        "title": "Meal sensor name",
+        "type": "string",
+        "placeholder": "Meal",
+        "description": "Display name of the meal sensor (e.g. 'Pasto'). Leave empty for 'Meal'."
+      },
+      "motionResetSeconds": {
+        "title": "Sensor reset (seconds)",
+        "type": "integer",
+        "default": 30,
+        "minimum": 5,
+        "description": "How long an activity/meal sensor stays triggered before clearing."
       }
     },
     "required": [

@@ -3,6 +3,26 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.5.0] - 2026-07-29
+
+### Added
+- **Pet activity sensors** (`enablePetSensors`, default on): a Motion
+  Sensor per pet — auto-discovered from your PetKit account — fires when
+  that pet uses the litter box, with the visit weight in the log.
+  Enables notifications and automations per pet.
+- **Meal sensors** (`enableMealSensors`, `mealSensorName`): camera feeders
+  get a Motion Sensor fired when an eating session is detected. If PetKit
+  pet detection is enabled on the feeder, attributed meals also fire the
+  pet's own sensor.
+- `motionResetSeconds` config: how long sensors stay triggered (default 30).
+- Requires petkit-bridge >= 1.2.0 (new `/device/{id}/events` endpoint).
+
+### Notes
+- Events are polled with `pollInterval`, so sensors fire up to ~1 minute
+  after the physical event — designed for notifications and automations,
+  not for real-time presence.
+- History is never replayed: only events newer than plugin startup fire.
+
 ## [0.4.0] - 2026-07-29
 
 ### Added

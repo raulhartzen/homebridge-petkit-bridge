@@ -14,6 +14,7 @@ import { FeederAccessory } from './accessories/feeder';
 import { LitterAccessory } from './accessories/litter';
 import { FountainAccessory } from './accessories/fountain';
 import { FeedAllAccessory } from './accessories/feedall';
+import { PetSensorAccessory } from './accessories/pet';
 
 /**
  * Device-type classification. The bridge's /devices endpoint reports
@@ -37,6 +38,10 @@ export interface PetkitBridgeConfig extends PlatformConfig {
   maintenanceName?: string;
   enableFeedAll?: boolean;
   feedAllName?: string;
+  enablePetSensors?: boolean;
+  enableMealSensors?: boolean;
+  mealSensorName?: string;
+  motionResetSeconds?: number;
 }
 
 export class PetkitBridgePlatform implements DynamicPlatformPlugin {
@@ -51,6 +56,19 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   public readonly maintenanceName: string;
   public readonly enableFeedAll: boolean;
   public readonly feedAllName: string;
+  public readonly enablePetSensors: boolean;
+  public readonly enableMealSensors: boolean;
+  public readonly mealSensorName: string;
+  public readonly motionResetSeconds: number;
+
+  /** Pet sensors by pet id, fed by the events poller. */
+  private readonly petSensors = new Map<string, PetSensorAccessory>();
+  /** Feeder handlers by device id, for meal-sensor triggers. */
+  private readonly feeders = new Map<string, FeederAccessory>();
+  /** Litter device ids to poll for events. */
+  private readonly litterIds: Array<number | string> = [];
+  /** Per-device watermark: only events newer than this fire sensors. */
+  private readonly eventWatermark = new Map<string, number>();
 
   /** Accessories restored from cache, keyed by UUID. */
   private readonly cached = new Map<string, PlatformAccessory>();
@@ -81,6 +99,10 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     this.maintenanceName = (config.maintenanceName ?? '').trim() || 'Maintenance';
     this.enableFeedAll = config.enableFeedAll !== false;  // default: enabled
     this.feedAllName = (config.feedAllName ?? '').trim() || 'Feed All';
+    this.enablePetSensors = config.enablePetSensors !== false;   // default on
+    this.enableMealSensors = config.enableMealSensors !== false; // default on
+    this.mealSensorName = (config.mealSensorName ?? '').trim() || 'Meal';
+    this.motionResetSeconds = Math.max(5, Number(config.motionResetSeconds ?? 30));
     this.client = new BridgeClient(bridgeUrl, token);
 
     if (!bridgeUrl || !token) {
@@ -152,6 +174,8 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
       this.setupFeedAll(feederCount);
     }
 
+    this.startEventsPoller();
+
     // Unregister cached accessories that no longer exist on the bridge.
     const stale: PlatformAccessory[] = [];
     for (const [uuid, accessory] of this.cached) {
@@ -163,6 +187,84 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     if (stale.length) {
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
     }
+  }
+
+  private setupPet(device: BridgeDevice, name: string): void {
+    const uuid = this.api.hap.uuid.generate(`petkit-bridge:pet:${device.id}`);
+    this.seen.add(uuid);
+    let accessory = this.cached.get(uuid);
+    const isNew = !accessory;
+    if (!accessory) {
+      accessory = new this.api.platformAccessory(name, uuid);
+    }
+    accessory.context.device = device;
+    this.petSensors.set(String(device.id), new PetSensorAccessory(this, accessory));
+    if (isNew) {
+      this.log.info('Registering pet sensor: %s', name);
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.cached.set(uuid, accessory);
+    } else {
+      this.log.info('Restored pet sensor: %s', name);
+      this.api.updatePlatformAccessories([accessory]);
+    }
+  }
+
+  /**
+   * Polls the bridge's /events feed and fires the virtual sensors.
+   * The watermark starts at "now" so history is never replayed as fresh
+   * motion on startup; only events newer than the last poll trigger.
+   */
+  private startEventsPoller(): void {
+    if (!this.enablePetSensors && !this.enableMealSensors) {
+      return;
+    }
+    const sources: Array<{ id: number | string; kind: 'litter' | 'feeder' }> = [
+      ...this.litterIds.map((id) => ({ id, kind: 'litter' as const })),
+      ...[...this.feeders.keys()].map((id) => ({ id, kind: 'feeder' as const })),
+    ];
+    if (sources.length === 0) {
+      return;
+    }
+    const now = Math.floor(Date.now() / 1000);
+    for (const s of sources) {
+      this.eventWatermark.set(String(s.id), now);
+    }
+    const poll = async () => {
+      for (const s of sources) {
+        const key = String(s.id);
+        const since = this.eventWatermark.get(key) ?? now;
+        try {
+          const events = await this.client.getEvents(s.id, since);
+          if (events.length === 0) {
+            continue;
+          }
+          this.eventWatermark.set(
+            key,
+            Math.max(...events.map((e) => e.timestamp), since),
+          );
+          for (const e of events.reverse()) {
+            if (s.kind === 'litter' && e.type === 'pet_out' && e.pet_id != null) {
+              const sensor = this.petSensors.get(String(e.pet_id));
+              const kg = e.weight_g != null ? ` (${(e.weight_g / 1000).toFixed(2)} kg)` : '';
+              sensor?.trigger(`litter box visit${kg}`);
+            } else if (s.kind === 'feeder' && e.type === 'eat') {
+              this.feeders.get(key)?.triggerMeal('eating session detected');
+              if (e.pet_id != null) {
+                this.petSensors.get(String(e.pet_id))?.trigger('meal');
+              }
+            }
+          }
+        } catch (err) {
+          this.log.debug('events poll failed for %s: %s', key, String(err));
+        }
+      }
+    };
+    setInterval(poll, this.pollInterval * 1000);
+    this.log.info(
+      'Events poller started (%d source(s), every %ds)',
+      sources.length,
+      this.pollInterval,
+    );
   }
 
   private setupFeedAll(feederCount: number): void {
@@ -192,6 +294,10 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     const type = String(device.type ?? '').toLowerCase();
     const name = device.name || `PetKit ${device.id}`;
 
+    if (type === 'pet' && this.enablePetSensors) {
+      this.setupPet(device, name);
+      return;
+    }
     if (IGNORED_TYPES.has(type)) {
       this.log.debug('Ignoring "%s" (type "%s": not a controllable device)', name, type);
       return;
@@ -208,9 +314,10 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     accessory.context.device = device;
 
     if (FEEDER_TYPES.has(type)) {
-      new FeederAccessory(this, accessory);
+      this.feeders.set(String(device.id), new FeederAccessory(this, accessory));
     } else if (LITTER_TYPES.has(type)) {
       new LitterAccessory(this, accessory);
+      this.litterIds.push(device.id);
     } else if (FOUNTAIN_TYPES.has(type)) {
       new FountainAccessory(this, accessory);
     } else {

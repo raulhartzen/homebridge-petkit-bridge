@@ -11,6 +11,18 @@ export interface BridgeDevice {
   type?: string;
 }
 
+export interface BridgeEvent {
+  source: 'litter' | 'feeder';
+  type: string | number | null;
+  pet_id: number | string | null;
+  pet_name: string | null;
+  weight_g: number | null;
+  start: number | null;
+  end: number | null;
+  timestamp: number;
+  event_id: string | null;
+}
+
 export interface FountainHkState {
   LeakDetected?: number;
   BatteryLevel?: number;
@@ -81,6 +93,18 @@ export class BridgeClient {
       }
     }
     throw new Error('unexpected /devices response shape');
+  }
+
+  /** GET /device/{id}/events — normalized event feed (newest first). */
+  async getEvents(
+    id: number | string,
+    since: number,
+  ): Promise<BridgeEvent[]> {
+    const data = await this.request<{ events: BridgeEvent[] }>(
+      'GET',
+      `/device/${id}/events?since=${since}&limit=100`,
+    );
+    return data.events ?? [];
   }
 
   /** GET /device/{id}/hk-state — fountain state in HomeKit-friendly format. */

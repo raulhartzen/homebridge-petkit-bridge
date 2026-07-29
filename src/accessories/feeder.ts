@@ -8,6 +8,9 @@ import { PetkitBridgePlatform } from '../platform';
  * conventional pattern).
  */
 export class FeederAccessory {
+  private mealSensor?: import('homebridge').Service;
+  private mealResetTimer?: NodeJS.Timeout;
+
   constructor(
     private readonly platform: PetkitBridgePlatform,
     private readonly accessory: PlatformAccessory,
@@ -31,6 +34,24 @@ export class FeederAccessory {
     feedSwitch.setCharacteristic(Characteristic.Name, feedName);
     feedSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
     feedSwitch.setCharacteristic(Characteristic.ConfiguredName, feedName);
+
+    // Optional per-feeder "Meal" motion sensor, fired by the events
+    // poller when an eat session is reported.
+    if (platform.enableMealSensors) {
+      const mealName = platform.mealSensorName;
+      const meal =
+        accessory.getServiceById(Service.MotionSensor, 'meal') ||
+        accessory.addService(Service.MotionSensor, mealName, 'meal');
+      meal.setCharacteristic(Characteristic.Name, mealName);
+      meal.addOptionalCharacteristic(Characteristic.ConfiguredName);
+      meal.setCharacteristic(Characteristic.ConfiguredName, mealName);
+      this.mealSensor = meal;
+    } else {
+      const stale = accessory.getServiceById(Service.MotionSensor, 'meal');
+      if (stale) {
+        accessory.removeService(stale);
+      }
+    }
 
     feedSwitch
       .getCharacteristic(Characteristic.On)
@@ -123,5 +144,21 @@ export class FeederAccessory {
       .map((s) => parseInt(s.trim(), 10))
       .filter((n) => Number.isFinite(n) && n > 0);
     return values.length ? Math.min(...values) : undefined;
+  }
+
+  /** Fires the Meal sensor (no-op when disabled). */
+  triggerMeal(detail: string): void {
+    if (!this.mealSensor) {
+      return;
+    }
+    const { Characteristic } = this.platform;
+    this.platform.log.info('[%s] meal: %s', this.accessory.displayName, detail);
+    this.mealSensor.updateCharacteristic(Characteristic.MotionDetected, true);
+    if (this.mealResetTimer) {
+      clearTimeout(this.mealResetTimer);
+    }
+    this.mealResetTimer = setTimeout(() => {
+      this.mealSensor!.updateCharacteristic(Characteristic.MotionDetected, false);
+    }, this.platform.motionResetSeconds * 1000);
   }
 }
