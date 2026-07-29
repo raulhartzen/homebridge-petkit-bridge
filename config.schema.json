@@ -2,7 +2,7 @@
   "pluginAlias": "PetkitBridge",
   "pluginType": "platform",
   "singular": true,
-  "headerDisplay": "Companion plugin for [petkit-bridge](https://github.com/raulhartzen/petkit-bridge). Run the bridge first, then point this plugin at it.",
+  "headerDisplay": "![PetKit Bridge](https://raw.githubusercontent.com/raulhartzen/homebridge-petkit-bridge/main/assets/config-banner.png)\n\nCompanion plugin for [petkit-bridge](https://github.com/raulhartzen/petkit-bridge). Run the bridge first, then point this plugin at it.",
   "schema": {
     "type": "object",
     "properties": {
@@ -129,5 +129,65 @@
       "bridgeUrl",
       "token"
     ]
-  }
+  },
+  "footerDisplay": "Need help? [Documentation](https://github.com/raulhartzen/homebridge-petkit-bridge#readme) · [Report an issue](https://github.com/raulhartzen/homebridge-petkit-bridge/issues)",
+  "layout": [
+    {
+      "type": "fieldset",
+      "title": "Connection",
+      "items": [
+        "name",
+        "bridgeUrl",
+        "token",
+        "pollInterval"
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Feeders & litter box",
+      "expandable": true,
+      "expanded": true,
+      "items": [
+        "feedAmount",
+        "scoopWait",
+        "enableFeedAll"
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Switch names (what Siri responds to)",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "feedName",
+        "cleanName",
+        "maintenanceName",
+        "feedAllName"
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Pet & meal sensors",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "enablePetSensors",
+        "enableMealSensors",
+        "mealSensorName",
+        "motionResetSeconds"
+      ]
+    },
+    {
+      "type": "fieldset",
+      "title": "Cameras (experimental)",
+      "expandable": true,
+      "expanded": false,
+      "items": [
+        "enableCameras",
+        "go2rtcUrl",
+        "cameraVcodec",
+        "ffmpegPath"
+      ]
+    }
+  ]
 }

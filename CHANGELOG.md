@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.1] - 2026-07-29
+
+### Changed
+- Redesigned configuration UI: dedicated banner, form organized into
+  collapsible sections (Connection, Feeders & litter box, Switch names,
+  Pet & meal sensors, Cameras), with the experimental Cameras section
+  collapsed by default. Footer links to documentation and issue tracker.
+  No functional changes.
+
 ## [0.6.0] - 2026-07-29
 
 ### Added
