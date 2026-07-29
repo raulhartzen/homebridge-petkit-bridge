@@ -3,6 +3,25 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.0] - 2026-07-29
+
+### Added
+- **Native HomeKit cameras** (`enableCameras`, default off — experimental):
+  camera-equipped devices are exposed as HomeKit cameras with live view in
+  the Home app. The plugin auto-registers each device's WHEP stream on
+  go2rtc via its API (nothing to add to `go2rtc.yaml`) and streams to
+  HomeKit through ffmpeg (H.264 passthrough by default). Snapshots come
+  from go2rtc's frame endpoint. Cameras are published as external
+  accessories and pair individually.
+- Config: `go2rtcUrl`, `cameraVcodec`, `ffmpegPath`.
+- Requires petkit-bridge >= 1.3.0 (camera capability flag) plus a running
+  go2rtc instance and ffmpeg on the Homebridge host.
+
+### Notes
+- v1 scope: video only (no audio, no HomeKit Secure Video).
+- The manual go2rtc + homebridge-camera-ffmpeg recipe in the bridge README
+  remains a supported alternative.
+
 ## [0.5.0] - 2026-07-29
 
 ### Added

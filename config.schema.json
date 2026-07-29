@@ -98,6 +98,30 @@
         "default": 30,
         "minimum": 5,
         "description": "How long an activity/meal sensor stays triggered before clearing."
+      },
+      "enableCameras": {
+        "title": "Native HomeKit cameras (experimental)",
+        "type": "boolean",
+        "default": false,
+        "description": "Exposes camera-equipped devices as HomeKit cameras. Requires: a running go2rtc instance (URL below) and ffmpeg installed on the Homebridge host. Streams are auto-registered on go2rtc; each camera pairs individually in the Home app."
+      },
+      "go2rtcUrl": {
+        "title": "go2rtc URL",
+        "type": "string",
+        "placeholder": "http://127.0.0.1:1984",
+        "description": "Base URL of the go2rtc API. RTSP is assumed on the same host, port 8554."
+      },
+      "cameraVcodec": {
+        "title": "Camera video codec",
+        "type": "string",
+        "placeholder": "copy",
+        "description": "ffmpeg video codec. 'copy' (default) passes the H.264 stream through — lowest latency/CPU. Set 'libx264' to transcode if your device's stream misbehaves in Home."
+      },
+      "ffmpegPath": {
+        "title": "ffmpeg path",
+        "type": "string",
+        "placeholder": "ffmpeg",
+        "description": "Path to the ffmpeg binary, if not on PATH."
       }
     },
     "required": [

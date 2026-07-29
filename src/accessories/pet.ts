@@ -6,7 +6,7 @@ import { PetkitBridgePlatform } from '../platform';
  * litter-box visit (or, if PetKit's pet detection is enabled on a camera
  * feeder, an attributed meal) for this pet. Motion stays active for
  * `motionResetSeconds`, then clears — enough for Home app notifications
- * and automations ("notify me when Milù uses the litter box").
+ * and automations ("notify me when the cat uses the litter box").
  */
 export class PetSensorAccessory {
   private resetTimer?: NodeJS.Timeout;

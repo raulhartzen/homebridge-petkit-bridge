@@ -15,6 +15,7 @@ import { LitterAccessory } from './accessories/litter';
 import { FountainAccessory } from './accessories/fountain';
 import { FeedAllAccessory } from './accessories/feedall';
 import { PetSensorAccessory } from './accessories/pet';
+import { CameraAccessory } from './accessories/camera';
 
 /**
  * Device-type classification. The bridge's /devices endpoint reports
@@ -42,6 +43,10 @@ export interface PetkitBridgeConfig extends PlatformConfig {
   enableMealSensors?: boolean;
   mealSensorName?: string;
   motionResetSeconds?: number;
+  enableCameras?: boolean;
+  go2rtcUrl?: string;
+  cameraVcodec?: string;
+  ffmpegPath?: string;
 }
 
 export class PetkitBridgePlatform implements DynamicPlatformPlugin {
@@ -60,6 +65,12 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   public readonly enableMealSensors: boolean;
   public readonly mealSensorName: string;
   public readonly motionResetSeconds: number;
+  public readonly enableCameras: boolean;
+  public readonly go2rtcUrl: string;
+  public readonly go2rtcRtspBase: string;
+  public readonly cameraVcodec: string;
+  public readonly ffmpegPath: string;
+  private readonly publishedCameras = new Set<string>();
 
   /** Pet sensors by pet id, fed by the events poller. */
   private readonly petSensors = new Map<string, PetSensorAccessory>();
@@ -103,6 +114,16 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     this.enableMealSensors = config.enableMealSensors !== false; // default on
     this.mealSensorName = (config.mealSensorName ?? '').trim() || 'Meal';
     this.motionResetSeconds = Math.max(5, Number(config.motionResetSeconds ?? 30));
+    this.enableCameras = config.enableCameras === true;  // default OFF
+    let g2r = (config.go2rtcUrl ?? '').trim().replace(/\/+$/, '');
+    if (g2r && !/^https?:\/\//i.test(g2r)) {
+      g2r = `http://${g2r}`;
+    }
+    this.go2rtcUrl = g2r || 'http://127.0.0.1:1984';
+    // RTSP restream lives on the same host as go2rtc, default port 8554.
+    this.go2rtcRtspBase = `rtsp://${new URL(this.go2rtcUrl).hostname}:8554`;
+    this.cameraVcodec = (config.cameraVcodec ?? '').trim() || 'copy';
+    this.ffmpegPath = (config.ffmpegPath ?? '').trim() || 'ffmpeg';
     this.client = new BridgeClient(bridgeUrl, token);
 
     if (!bridgeUrl || !token) {
@@ -176,6 +197,21 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
 
     this.startEventsPoller();
 
+    if (this.enableCameras) {
+      const cams = devices.filter((d) => d.camera === true);
+      if (cams.length === 0) {
+        this.log.warn(
+          'enableCameras is on but the bridge reported no camera-equipped ' +
+            'devices. petkit-bridge >= 1.3.0 is required for camera detection.',
+        );
+      }
+      for (const cam of cams) {
+        this.setupCamera(cam).catch((err) =>
+          this.log.error('Camera setup failed for %s: %s', cam.name, String(err)),
+        );
+      }
+    }
+
     // Unregister cached accessories that no longer exist on the bridge.
     const stale: PlatformAccessory[] = [];
     for (const [uuid, accessory] of this.cached) {
@@ -187,6 +223,49 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     if (stale.length) {
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
     }
+  }
+
+  /**
+   * Registers the device's WHEP stream on go2rtc (via its API — the
+   * definition is not persisted, so it is re-registered at every
+   * discovery) and publishes a native HomeKit camera as an EXTERNAL
+   * accessory (cameras pair individually, like camera plugins do).
+   */
+  private async setupCamera(device: BridgeDevice): Promise<void> {
+    const streamName = `petkit_${device.id}`;
+    const src =
+      `webrtc:${this.client.baseUrl}/device/${device.id}/whep` +
+      `?token=${encodeURIComponent(String(this.config.token))}#format=whep`;
+    const url =
+      `${this.go2rtcUrl}/api/streams?name=${encodeURIComponent(streamName)}` +
+      `&src=${encodeURIComponent(src)}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      throw new Error(`go2rtc stream registration -> HTTP ${res.status}`);
+    }
+
+    const uuid = this.api.hap.uuid.generate(`petkit-bridge:camera:${device.id}`);
+    if (this.publishedCameras.has(uuid)) {
+      return; // already published in this runtime (discovery retry)
+    }
+    const name = `${device.name || device.id} Camera`;
+    const accessory = new this.api.platformAccessory(
+      name, uuid, this.api.hap.Categories.CAMERA,
+    );
+    accessory.context.device = device;
+    new CameraAccessory(this, accessory, streamName);
+    this.api.publishExternalAccessories(PLUGIN_NAME, [accessory]);
+    this.publishedCameras.add(uuid);
+    this.log.info(
+      'Published camera: %s — pair it separately in the Home app ' +
+        '(Home > + > Add Accessory > More options). The Setup Code is ' +
+        'printed by Homebridge below this line and is also shown in the ' +
+        'Homebridge UI (it is your main bridge PIN).',
+      name,
+    );
   }
 
   private setupPet(device: BridgeDevice, name: string): void {

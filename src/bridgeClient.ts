@@ -6,6 +6,7 @@
  */
 
 export interface BridgeDevice {
+  camera?: boolean;
   id: number | string;
   name?: string;
   type?: string;
@@ -33,7 +34,7 @@ export interface FountainHkState {
 
 export class BridgeClient {
   constructor(
-    private readonly baseUrl: string,
+    public readonly baseUrl: string,
     private readonly token: string,
     private readonly timeoutMs = 10000,
   ) {
