@@ -21,12 +21,16 @@ export class FeederAccessory {
       .setCharacteristic(Characteristic.Model, String(device.type ?? 'feeder'))
       .setCharacteristic(Characteristic.SerialNumber, String(device.id));
 
+    const feedName = platform.feedName;
+    // Look up by stable subtype ('feed'), never by display name: the name
+    // is configurable and must be free to change between restarts.
     const feedSwitch =
-      accessory.getService('Feed') ||
-      accessory.addService(Service.Switch, 'Feed', 'feed');
-    feedSwitch.setCharacteristic(Characteristic.Name, 'Feed');
+      accessory.getServiceById(Service.Switch, 'feed') ||
+      accessory.getService('Feed') ||  // legacy pre-0.3.0 cached accessories
+      accessory.addService(Service.Switch, feedName, 'feed');
+    feedSwitch.setCharacteristic(Characteristic.Name, feedName);
     feedSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
-    feedSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Feed');
+    feedSwitch.setCharacteristic(Characteristic.ConfiguredName, feedName);
 
     feedSwitch
       .getCharacteristic(Characteristic.On)

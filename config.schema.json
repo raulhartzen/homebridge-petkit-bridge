@@ -43,6 +43,24 @@
         "minimum": 5,
         "maximum": 300,
         "description": "How long the bridge waits before ending a cleaning (scoop) cycle. Leave empty to use the bridge default (~50s, tuned on the Puramax 2)."
+      },
+      "feedName": {
+        "title": "Feed switch name",
+        "type": "string",
+        "placeholder": "Feed",
+        "description": "Display name of the feeder switch — this is what the Home app shows and what Siri responds to (e.g. 'Eroga cibo'). Leave empty for 'Feed'."
+      },
+      "cleanName": {
+        "title": "Clean switch name",
+        "type": "string",
+        "placeholder": "Clean",
+        "description": "Display name of the litter cleaning switch (e.g. 'Pulisci lettiera'). Leave empty for 'Clean'."
+      },
+      "maintenanceName": {
+        "title": "Maintenance switch name",
+        "type": "string",
+        "placeholder": "Maintenance",
+        "description": "Display name of the litter maintenance switch (e.g. 'Manutenzione'). Leave empty for 'Maintenance'."
       }
     },
     "required": [

@@ -3,6 +3,19 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] - 2026-07-28
+
+### Added
+- **Configurable switch names** (`feedName`, `cleanName`, `maintenanceName`):
+  set the display names the Home app shows and Siri responds to, in your own
+  language (e.g. "Pulisci lettiera" instead of "Clean"). Empty values fall
+  back to the English defaults.
+
+### Changed
+- Services are now looked up by their stable subtype instead of their
+  display name, so renaming never creates duplicate switches. Existing
+  cached accessories are migrated transparently.
+
 ## [0.2.3] - 2026-07-28
 
 ### Changed

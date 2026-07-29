@@ -29,15 +29,18 @@ export class LitterAccessory {
       .setCharacteristic(Characteristic.SerialNumber, String(device.id));
 
     // --- Clean (momentary) ---
+    const cleanName = platform.cleanName;
+    // Look up by stable subtype, never by display name (name is configurable).
     const cleanSwitch =
-      accessory.getService('Clean') ||
-      accessory.addService(Service.Switch, 'Clean', 'clean');
+      accessory.getServiceById(Service.Switch, 'clean') ||
+      accessory.getService('Clean') ||  // legacy pre-0.3.0 cached accessories
+      accessory.addService(Service.Switch, cleanName, 'clean');
     // Explicit display name: without ConfiguredName, recent iOS versions
     // fall back to the accessory name for every service, making the two
     // switches indistinguishable in the Home app.
-    cleanSwitch.setCharacteristic(Characteristic.Name, 'Clean');
+    cleanSwitch.setCharacteristic(Characteristic.Name, cleanName);
     cleanSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
-    cleanSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Clean');
+    cleanSwitch.setCharacteristic(Characteristic.ConfiguredName, cleanName);
 
     cleanSwitch
       .getCharacteristic(Characteristic.On)
@@ -73,12 +76,14 @@ export class LitterAccessory {
       });
 
     // --- Maintenance (stateful) ---
+    const maintName = platform.maintenanceName;
     const maintSwitch =
-      accessory.getService('Maintenance') ||
-      accessory.addService(Service.Switch, 'Maintenance', 'maintenance');
-    maintSwitch.setCharacteristic(Characteristic.Name, 'Maintenance');
+      accessory.getServiceById(Service.Switch, 'maintenance') ||
+      accessory.getService('Maintenance') ||  // legacy pre-0.3.0
+      accessory.addService(Service.Switch, maintName, 'maintenance');
+    maintSwitch.setCharacteristic(Characteristic.Name, maintName);
     maintSwitch.addOptionalCharacteristic(Characteristic.ConfiguredName);
-    maintSwitch.setCharacteristic(Characteristic.ConfiguredName, 'Maintenance');
+    maintSwitch.setCharacteristic(Characteristic.ConfiguredName, maintName);
 
     maintSwitch
       .getCharacteristic(Characteristic.On)

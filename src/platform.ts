@@ -31,6 +31,9 @@ export interface PetkitBridgeConfig extends PlatformConfig {
   pollInterval?: number;
   feedAmount?: number;
   scoopWait?: number;
+  feedName?: string;
+  cleanName?: string;
+  maintenanceName?: string;
 }
 
 export class PetkitBridgePlatform implements DynamicPlatformPlugin {
@@ -40,6 +43,9 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   public readonly pollInterval: number;
   public readonly feedAmount: number;
   public readonly scoopWait: number | undefined;
+  public readonly feedName: string;
+  public readonly cleanName: string;
+  public readonly maintenanceName: string;
 
   /** Accessories restored from cache, keyed by UUID. */
   private readonly cached = new Map<string, PlatformAccessory>();
@@ -63,6 +69,11 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     // Seconds the bridge waits before ending a scoop cycle; undefined
     // means "use the bridge default" (~50s, tuned on the Puramax 2).
     this.scoopWait = config.scoopWait !== undefined ? Number(config.scoopWait) : undefined;
+    // Configurable switch names (what the Home app shows and Siri responds
+    // to). Empty/whitespace values fall back to the English defaults.
+    this.feedName = (config.feedName ?? '').trim() || 'Feed';
+    this.cleanName = (config.cleanName ?? '').trim() || 'Clean';
+    this.maintenanceName = (config.maintenanceName ?? '').trim() || 'Maintenance';
     this.client = new BridgeClient(bridgeUrl, token);
 
     if (!bridgeUrl || !token) {
