@@ -99,6 +99,16 @@ export class BridgeClient {
     await this.request('POST', `/device/${id}/feed`, { amount });
   }
 
+  /**
+   * POST /feed-all — dispense on every single-hopper feeder at once.
+   * Returns the bridge's per-feeder outcome report.
+   */
+  async feedAll(
+    amount: number,
+  ): Promise<{ all_ok: boolean; results: Array<{ id: string; name?: string; ok: boolean; amount?: number; error?: string }> }> {
+    return this.request('POST', '/feed-all', { amount });
+  }
+
   /** POST /device/{id}/clean — start a cleaning cycle (START only; may not stop on its own). */
   async clean(id: number | string): Promise<void> {
     await this.request('POST', `/device/${id}/clean`, { mode: 'CLEANING' });

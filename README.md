@@ -69,6 +69,8 @@ Via the Homebridge UI (recommended), or manually in `config.json`:
 | `feedName` | `Feed` | Display name of the feeder switch — what the Home app shows and Siri responds to (e.g. `Eroga cibo`) |
 | `cleanName` | `Clean` | Display name of the litter cleaning switch (e.g. `Pulisci lettiera`) |
 | `maintenanceName` | `Maintenance` | Display name of the litter maintenance switch (e.g. `Manutenzione`) |
+| `enableFeedAll` | `true` | Adds a single switch that dispenses on **all** feeders at once (created only when 2+ feeders are discovered) |
+| `feedAllName` | `Feed All` | Display name of the Feed All switch (e.g. `Eroga cibo`) |
 
 > **Where do I find my token?** It's whatever you set as `BRIDGE_TOKEN` when you deployed [petkit-bridge](https://github.com/raulhartzen/petkit-bridge) — however you provided its environment variables. With the standard docker-compose setup that's the `.env` file next to the compose file, so on the machine running the bridge: `grep BRIDGE_TOKEN .env`. If you deployed differently (plain environment variables, another orchestrator), check wherever you defined them.
 

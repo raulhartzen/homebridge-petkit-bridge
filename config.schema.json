@@ -61,6 +61,18 @@
         "type": "string",
         "placeholder": "Maintenance",
         "description": "Display name of the litter maintenance switch (e.g. 'Manutenzione'). Leave empty for 'Maintenance'."
+      },
+      "enableFeedAll": {
+        "title": "Enable \"Feed All\" switch",
+        "type": "boolean",
+        "default": true,
+        "description": "Adds a single switch that dispenses on ALL feeders at once. Only created when at least two feeders are discovered."
+      },
+      "feedAllName": {
+        "title": "Feed All switch name",
+        "type": "string",
+        "placeholder": "Feed All",
+        "description": "Display name of the Feed All switch — what the Home app shows and Siri responds to (e.g. 'Eroga cibo'). Leave empty for 'Feed All'."
       }
     },
     "required": [

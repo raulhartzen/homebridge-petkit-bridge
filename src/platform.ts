@@ -13,6 +13,7 @@ import { BridgeClient, BridgeDevice } from './bridgeClient';
 import { FeederAccessory } from './accessories/feeder';
 import { LitterAccessory } from './accessories/litter';
 import { FountainAccessory } from './accessories/fountain';
+import { FeedAllAccessory } from './accessories/feedall';
 
 /**
  * Device-type classification. The bridge's /devices endpoint reports
@@ -34,6 +35,8 @@ export interface PetkitBridgeConfig extends PlatformConfig {
   feedName?: string;
   cleanName?: string;
   maintenanceName?: string;
+  enableFeedAll?: boolean;
+  feedAllName?: string;
 }
 
 export class PetkitBridgePlatform implements DynamicPlatformPlugin {
@@ -46,6 +49,8 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   public readonly feedName: string;
   public readonly cleanName: string;
   public readonly maintenanceName: string;
+  public readonly enableFeedAll: boolean;
+  public readonly feedAllName: string;
 
   /** Accessories restored from cache, keyed by UUID. */
   private readonly cached = new Map<string, PlatformAccessory>();
@@ -74,6 +79,8 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     this.feedName = (config.feedName ?? '').trim() || 'Feed';
     this.cleanName = (config.cleanName ?? '').trim() || 'Clean';
     this.maintenanceName = (config.maintenanceName ?? '').trim() || 'Maintenance';
+    this.enableFeedAll = config.enableFeedAll !== false;  // default: enabled
+    this.feedAllName = (config.feedAllName ?? '').trim() || 'Feed All';
     this.client = new BridgeClient(bridgeUrl, token);
 
     if (!bridgeUrl || !token) {
@@ -134,6 +141,17 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
       this.setupDevice(device);
     }
 
+    // Virtual "Feed All" switch: only when enabled AND there are at least
+    // two feeders (with one, it would duplicate its own Feed switch).
+    // When disabled (or feeders drop below two) the stale-pruning below
+    // removes any cached instance automatically.
+    const feederCount = devices.filter((d) =>
+      FEEDER_TYPES.has(String(d.type ?? '').toLowerCase()),
+    ).length;
+    if (this.enableFeedAll && feederCount >= 2) {
+      this.setupFeedAll(feederCount);
+    }
+
     // Unregister cached accessories that no longer exist on the bridge.
     const stale: PlatformAccessory[] = [];
     for (const [uuid, accessory] of this.cached) {
@@ -144,6 +162,29 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     }
     if (stale.length) {
       this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, stale);
+    }
+  }
+
+  private setupFeedAll(feederCount: number): void {
+    const uuid = this.api.hap.uuid.generate('petkit-bridge:feed-all');
+    this.seen.add(uuid);
+    let accessory = this.cached.get(uuid);
+    const isNew = !accessory;
+    if (!accessory) {
+      accessory = new this.api.platformAccessory(this.feedAllName, uuid);
+    }
+    new FeedAllAccessory(this, accessory);
+    if (isNew) {
+      this.log.info(
+        'Registering virtual accessory: %s (dispenses on %d feeders)',
+        this.feedAllName,
+        feederCount,
+      );
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      this.cached.set(uuid, accessory);
+    } else {
+      this.log.info('Restored virtual accessory: %s', this.feedAllName);
+      this.api.updatePlatformAccessories([accessory]);
     }
   }
 

@@ -3,6 +3,15 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-07-29
+
+### Added
+- **"Feed All" virtual switch** (`enableFeedAll`, default on; `feedAllName`
+  for the display/Siri name): one tap dispenses on every single-hopper
+  feeder via the bridge's `/feed-all` endpoint. Created only when at least
+  two feeders are discovered. Partial failures are logged per feeder
+  without failing the switch; only a total failure reports an error.
+
 ## [0.3.0] - 2026-07-28
 
 ### Added
