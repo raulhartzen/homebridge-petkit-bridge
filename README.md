@@ -98,8 +98,6 @@ npm install
 npm run build     # or: npm run watch
 ```
 
-To test against a local Homebridge without publishing: `npm link` in this folder, then `npm link homebridge-petkit-bridge` in your Homebridge folder (or install by path).
-
 ## License
 
 MIT
