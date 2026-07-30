@@ -91,13 +91,6 @@ Via the Homebridge UI (recommended), or manually in `config.json`:
 
 > **Where do I find my token?** It's whatever you set as `BRIDGE_TOKEN` when you deployed [petkit-bridge](https://github.com/raulhartzen/petkit-bridge) — however you provided its environment variables. With the standard docker-compose setup that's the `.env` file next to the compose file, so on the machine running the bridge: `grep BRIDGE_TOKEN .env`. If you deployed differently (plain environment variables, another orchestrator), check wherever you defined them.
 
-## Development
-
-```bash
-npm install
-npm run build     # or: npm run watch
-```
-
 ## License
 
 MIT
