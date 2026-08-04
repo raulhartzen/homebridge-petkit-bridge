@@ -3,6 +3,13 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.6.2] - 2026-08-04
+
+### Changed
+- Display name now lists the supported device families ("Homebridge
+  PetKit - Full (Feeders, Cameras, Litter, Fountains)") so the plugin's
+  coverage is clear at a glance in the Homebridge UI search.
+
 ## [0.6.1] - 2026-07-29
 
 ### Changed
