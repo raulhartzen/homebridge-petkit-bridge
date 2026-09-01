@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/raulhartzen/homebridge-petkit-bridge/main/assets/banner.png" alt="homebridge-petkit-bridge — petkit-bridge to Apple HomeKit" width="820">
+  <img width="3686" height="1152" alt="homebridge-petkit-bridge_banner" src="https://github.com/user-attachments/assets/7980d6c7-5b36-4b29-9977-74937f2c3487" alt="homebridge-petkit-bridge — petkit-bridge to Apple HomeKit" />
 </p>
 
-# v7 coming in September 2026
+# v7 with major changes and fixes coming in September 2026
 
 <p align="center">
   <a href="https://www.npmjs.com/package/homebridge-petkit-bridge"><img src="https://img.shields.io/npm/v/homebridge-petkit-bridge?label=npm" alt="npm version"></a>
@@ -21,7 +21,7 @@ Homebridge plugin for [petkit-bridge](https://github.com/raulhartzen/petkit-brid
 
 <p align="center">
   <a href="https://github.com/raulhartzen/petkit-bridge">
-    <img src="https://raw.githubusercontent.com/raulhartzen/homebridge-petkit-bridge/main/assets/companion-bridge.png" alt="Powered by petkit-bridge" width="700">
+    <img width="461" height="144" alt="companion_petkitbridge" src="https://github.com/user-attachments/assets/376d06b4-89f5-45a9-b70c-659b96542db4" alt="Powered by petkit-bridge (raulhartzen)" />
   </a>
 </p>
 
