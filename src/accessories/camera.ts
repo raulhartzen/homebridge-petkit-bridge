@@ -17,6 +17,9 @@ interface ActiveSession {
   videoPort: number;
   ssrc: number;
   videoSRTP: string; // base64 key+salt
+  audioPort: number;
+  audioSSRC: number;
+  audioSRTP: string; // base64 key+salt
   process?: ChildProcess;
 }
 
@@ -34,10 +37,11 @@ function reservePort(): Promise<number> {
 
 /**
  * Native HomeKit camera for a camera-equipped PetKit device.
- * Video path: bridge (WHEP) -> go2rtc (RTSP) -> ffmpeg -> HomeKit (SRTP).
+ * Media path: bridge (WHEP) -> go2rtc (RTSP) -> ffmpeg -> HomeKit (SRTP).
  * The RTSP stream is auto-registered on go2rtc by the platform; snapshots
  * come from go2rtc's frame endpoint (no ffmpeg involved).
- * v1 scope: video only (no audio, no HKSV).
+ * Video is passed through (or transcoded, see cameraVcodec); the device's
+ * G.711 audio is transcoded to AAC-ELD or Opus for HomeKit. No HKSV.
  */
 export class CameraAccessory implements CameraStreamingDelegate {
   private readonly sessions = new Map<string, ActiveSession>();
@@ -90,6 +94,21 @@ export class CameraAccessory implements CameraStreamingDelegate {
             ],
           },
         },
+        ...(platform.cameraAudio === 'off'
+          ? {}
+          : {
+              audio: {
+                twoWayAudio: false,
+                codecs: [
+                  {
+                    type: platform.cameraAudio === 'opus'
+                      ? hap.AudioStreamingCodecType.OPUS
+                      : hap.AudioStreamingCodecType.AAC_ELD,
+                    samplerate: hap.AudioStreamingSamplerate.KHZ_16,
+                  },
+                ],
+              },
+            }),
       },
     });
     accessory.configureController(controller);
@@ -124,13 +143,19 @@ export class CameraAccessory implements CameraStreamingDelegate {
     const hap = this.platform.api.hap;
     try {
       const returnPort = await reservePort();
+      const audioReturnPort = await reservePort();
       const ssrc = hap.CameraController.generateSynchronisationSource();
+      const audioSSRC = hap.CameraController.generateSynchronisationSource();
       const video = request.video;
+      const audio = request.audio;
       this.sessions.set(request.sessionID, {
         address: request.targetAddress,
         videoPort: video.port,
         ssrc,
         videoSRTP: Buffer.concat([video.srtp_key, video.srtp_salt]).toString('base64'),
+        audioPort: audio.port,
+        audioSSRC,
+        audioSRTP: Buffer.concat([audio.srtp_key, audio.srtp_salt]).toString('base64'),
       });
       callback(undefined, {
         video: {
@@ -138,6 +163,12 @@ export class CameraAccessory implements CameraStreamingDelegate {
           ssrc,
           srtp_key: video.srtp_key,
           srtp_salt: video.srtp_salt,
+        },
+        audio: {
+          port: audioReturnPort,
+          ssrc: audioSSRC,
+          srtp_key: audio.srtp_key,
+          srtp_salt: audio.srtp_salt,
         },
       });
     } catch (err) {
@@ -169,11 +200,37 @@ export class CameraAccessory implements CameraStreamingDelegate {
                 '-filter:v', `scale=${v.width}:-2`,
                 '-b:v', `${v.max_bit_rate}k`,
               ];
+        const a = request.audio;
+        const audioMode = this.platform.cameraAudio;
+        const wantAudio = audioMode !== 'off';
+        // HomeKit tells us the codec/sample rate it negotiated; the source is
+        // G.711 8 kHz mono, so we upsample to what was requested (16 kHz).
+        const audioEncode = !wantAudio
+          ? []
+          : a.codec === 'OPUS'
+            ? ['-codec:a', 'libopus', '-application', 'lowdelay']
+            : ['-codec:a', 'libfdk_aac', '-profile:a', 'aac_eld', '-flags', '+global_header'];
+        const audioArgs = !wantAudio
+          ? []
+          : [
+              '-map', '0:a:0', '-vn', '-sn', '-dn',
+              ...audioEncode,
+              '-ac', '1',
+              '-ar', `${a.sample_rate}k`,
+              '-b:a', `${a.max_bit_rate}k`,
+              '-payload_type', String(a.pt),
+              '-ssrc', String(session.audioSSRC),
+              '-f', 'rtp',
+              '-srtp_out_suite', 'AES_CM_128_HMAC_SHA1_80',
+              '-srtp_out_params', session.audioSRTP,
+              `srtp://${session.address}:${session.audioPort}` +
+                `?rtcpport=${session.audioPort}&pkt_size=188`,
+            ];
         const args = [
           '-hide_banner', '-loglevel', 'error',
           '-rtsp_transport', 'tcp',
           '-i', this.rtspUrl,
-          '-an', '-sn', '-dn',
+          '-map', '0:v:0', '-an', '-sn', '-dn',
           ...encode,
           '-payload_type', String(v.pt),
           '-ssrc', String(session.ssrc),
@@ -182,10 +239,12 @@ export class CameraAccessory implements CameraStreamingDelegate {
           '-srtp_out_params', session.videoSRTP,
           `srtp://${session.address}:${session.videoPort}` +
             `?rtcpport=${session.videoPort}&pkt_size=1316`,
+          ...audioArgs,
         ];
         this.platform.log.info(
-          '[%s] starting stream (%dx%d, %s)',
+          '[%s] starting stream (%dx%d, %s, audio: %s)',
           this.accessory.displayName, v.width, v.height, vcodec,
+          wantAudio ? `${a.codec} ${a.sample_rate}kHz` : 'off',
         );
         const proc = spawn(this.platform.ffmpegPath, args, { env: process.env });
         proc.stderr?.on('data', (d: Buffer) => {

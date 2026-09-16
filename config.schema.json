@@ -117,6 +117,32 @@
         "placeholder": "copy",
         "description": "ffmpeg video codec. 'copy' (default) passes the H.264 stream through — lowest latency/CPU. Set 'libx264' to transcode if your device's stream misbehaves in Home."
       },
+      "cameraAudio": {
+        "title": "Camera audio",
+        "type": "string",
+        "default": "aac",
+        "oneOf": [
+          {
+            "title": "AAC-ELD (default, best Home app compatibility)",
+            "enum": [
+              "aac"
+            ]
+          },
+          {
+            "title": "Opus",
+            "enum": [
+              "opus"
+            ]
+          },
+          {
+            "title": "Off (video only)",
+            "enum": [
+              "off"
+            ]
+          }
+        ],
+        "description": "Audio for the native cameras. The device's G.711 audio is transcoded by ffmpeg; needs libfdk_aac (AAC) or libopus (Opus) in your ffmpeg build — the Homebridge ffmpeg has both. Requires petkit-bridge v1.4.0 or newer with PETKIT_CAMERA_AUDIO=1."
+      },
       "ffmpegPath": {
         "title": "ffmpeg path",
         "type": "string",
@@ -186,6 +212,7 @@
         "enableCameras",
         "go2rtcUrl",
         "cameraVcodec",
+        "cameraAudio",
         "ffmpegPath"
       ]
     }

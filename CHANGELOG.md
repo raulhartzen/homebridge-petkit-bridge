@@ -3,6 +3,16 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.7.0] - 2026-09-10
+
+### Added
+- Audio in native HomeKit cameras. The device's G.711 audio (delivered by
+  petkit-bridge v1.4.0+ via go2rtc) is transcoded to AAC-ELD (default) or
+  Opus and sent to HomeKit as a second SRTP stream. New `cameraAudio`
+  option: `aac` (default), `opus`, or `off` for the previous video-only
+  behavior. Requires petkit-bridge v1.4.0 or newer.
+  Thanks to @egormanga for tracking down the audio flag on the bridge side.
+
 ## [0.6.2] - 2026-08-04
 
 ### Changed

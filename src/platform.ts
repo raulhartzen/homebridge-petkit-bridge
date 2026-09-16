@@ -46,6 +46,7 @@ export interface PetkitBridgeConfig extends PlatformConfig {
   enableCameras?: boolean;
   go2rtcUrl?: string;
   cameraVcodec?: string;
+  cameraAudio?: string;
   ffmpegPath?: string;
 }
 
@@ -69,6 +70,7 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
   public readonly go2rtcUrl: string;
   public readonly go2rtcRtspBase: string;
   public readonly cameraVcodec: string;
+  public readonly cameraAudio: 'aac' | 'opus' | 'off';
   public readonly ffmpegPath: string;
   private readonly publishedCameras = new Set<string>();
 
@@ -123,6 +125,8 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     // RTSP restream lives on the same host as go2rtc, default port 8554.
     this.go2rtcRtspBase = `rtsp://${new URL(this.go2rtcUrl).hostname}:8554`;
     this.cameraVcodec = (config.cameraVcodec ?? '').trim() || 'copy';
+    const audio = (config.cameraAudio ?? '').trim().toLowerCase();
+    this.cameraAudio = audio === 'opus' || audio === 'off' ? audio : 'aac';
     this.ffmpegPath = (config.ffmpegPath ?? '').trim() || 'ffmpeg';
     this.client = new BridgeClient(bridgeUrl, token);
 
