@@ -2,8 +2,6 @@
   <img width="3686" height="1152" alt="homebridge-petkit-bridge_banner" src="https://github.com/user-attachments/assets/7980d6c7-5b36-4b29-9977-74937f2c3487" alt="homebridge-petkit-bridge — petkit-bridge to Apple HomeKit" />
 </p>
 
-# v7 with major changes and fixes coming in September 2026
-
 <p align="center">
   <a href="https://www.npmjs.com/package/homebridge-petkit-bridge"><img src="https://img.shields.io/npm/v/homebridge-petkit-bridge?label=npm" alt="npm version"></a>
   <a href="https://www.npmjs.com/package/homebridge-petkit-bridge"><img src="https://img.shields.io/npm/dm/homebridge-petkit-bridge" alt="npm downloads"></a>
