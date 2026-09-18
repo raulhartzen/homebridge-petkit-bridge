@@ -1,0 +1,53 @@
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title mb-1">Test connection</h5>
+    <p class="text-muted mb-3" style="font-size: 0.9em">
+      Checks that the bridge URL and token below work and lists the devices it exposes,
+      without saving anything.
+    </p>
+    <button id="pkb-test" class="btn btn-primary" type="button">Test connection</button>
+    <div id="pkb-result" class="mt-3"></div>
+  </div>
+</div>
+
+<div id="pkb-form"></div>
+
+<script>
+(async () => {
+  const btn = document.getElementById('pkb-test');
+  const out = document.getElementById('pkb-result');
+
+  // Render the standard schema-driven form; it keeps the plugin config in sync.
+  homebridge.showSchemaForm();
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+
+  btn.addEventListener('click', async () => {
+    const config = (await homebridge.getPluginConfig())[0] || {};
+    btn.disabled = true;
+    out.innerHTML = '<span class="text-muted">Contacting the bridge…</span>';
+    try {
+      const res = await homebridge.request('/test', {
+        bridgeUrl: config.bridgeUrl,
+        token: config.token,
+      });
+      const cams = res.devices.filter((d) => d.camera).length;
+      const rows = res.devices.map((d) =>
+        `<tr><td>${esc(d.name)}</td><td><code>${esc(d.type)}</code></td>` +
+        `<td>${d.camera ? 'yes' : '—'}</td></tr>`).join('');
+      out.innerHTML =
+        `<div class="alert alert-success mb-2">Connected to <code>${esc(res.url)}</code> — ` +
+        `${res.devices.length} device(s) found${cams ? `, ${cams} with camera` : ''}.</div>` +
+        (rows
+          ? `<table class="table table-sm mb-0"><thead><tr><th>Device</th><th>Type</th><th>Camera</th></tr></thead><tbody>${rows}</tbody></table>`
+          : '<span class="text-muted">The bridge answered but reported no devices. Check that the devices are shared with the bridge\'s PetKit account.</span>');
+    } catch (err) {
+      out.innerHTML = `<div class="alert alert-danger mb-0">${esc(err.message || err)}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>

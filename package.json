@@ -1,7 +1,7 @@
 {
   "name": "homebridge-petkit-bridge",
   "displayName": "Homebridge PetKit - Full (Feeders, Cameras, Litter, Fountains)",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "Homebridge plugin for petkit-bridge: exposes PetKit feeders, litter boxes and fountains to Apple HomeKit via the local petkit-bridge HTTP API.",
   "license": "MIT",
   "author": "raulhartzen",
@@ -25,7 +25,8 @@
   "main": "dist/index.js",
   "files": [
     "dist",
-    "config.schema.json"
+    "config.schema.json",
+    "homebridge-ui"
   ],
   "engines": {
     "node": ">=18.0.0",
@@ -35,6 +36,9 @@
     "build": "tsc",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@homebridge/plugin-ui-utils": "^2.2.6"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

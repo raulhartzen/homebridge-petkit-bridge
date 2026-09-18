@@ -3,14 +3,28 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.7.0] - 2026-09-10
+## [1.0.0] - 2026-09-17
+
+First stable release: the configuration interface is considered settled and
+will only change in a backwards-compatible way from here on.
 
 ### Added
-- Audio in native HomeKit cameras. The device's G.711 audio (delivered by
-  petkit-bridge v1.4.0+ via go2rtc) is transcoded to AAC-ELD (default) or
-  Opus and sent to HomeKit as a second SRTP stream. New `cameraAudio`
-  option: `aac` (default), `opus`, or `off` for the previous video-only
-  behavior. Requires petkit-bridge v1.4.0 or newer.
+- Experimental audio in native HomeKit cameras, off by default. Set
+  `cameraAudio` to `aac` (AAC-ELD) or `opus` to add the device's audio to the
+  live view. Requires petkit-bridge v1.4.0 or newer with
+  `PETKIT_CAMERA_AUDIO=1`.
+- Audio is streamed by a separate ffmpeg process, so a stalling audio track
+  can no longer block the video output.
+- ffmpeg errors are now logged at warning level (previously debug only).
+- **Test connection** button in the plugin settings: checks the bridge URL
+  and token and lists the devices the bridge exposes, before saving. Adds
+  `@homebridge/plugin-ui-utils` as the plugin's only runtime dependency.
+
+### Known limitation
+- On the maintainer's setup (Yumshare feeders) the audio stream is negotiated
+  and encoded without errors, but no sound reaches the Home app yet. Leaving
+  `cameraAudio` off gives the 0.6.x behaviour. Reports from other PetKit
+  models are welcome.
   Thanks to @egormanga for tracking down the audio flag on the bridge side.
 
 ## [0.6.2] - 2026-08-04

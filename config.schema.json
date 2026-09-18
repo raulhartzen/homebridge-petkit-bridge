@@ -2,6 +2,7 @@
   "pluginAlias": "PetkitBridge",
   "pluginType": "platform",
   "singular": true,
+  "customUi": true,
   "headerDisplay": "![PetKit Bridge](https://raw.githubusercontent.com/raulhartzen/homebridge-petkit-bridge/main/assets/config-banner.png)\n\nCompanion plugin for [petkit-bridge](https://github.com/raulhartzen/petkit-bridge). Run the bridge first, then point this plugin at it.",
   "schema": {
     "type": "object",
@@ -120,28 +121,28 @@
       "cameraAudio": {
         "title": "Camera audio",
         "type": "string",
-        "default": "aac",
+        "default": "off",
         "oneOf": [
           {
-            "title": "AAC-ELD (default, best Home app compatibility)",
+            "title": "Off (video only, default)",
+            "enum": [
+              "off"
+            ]
+          },
+          {
+            "title": "AAC-ELD (experimental)",
             "enum": [
               "aac"
             ]
           },
           {
-            "title": "Opus",
+            "title": "Opus (experimental)",
             "enum": [
               "opus"
             ]
-          },
-          {
-            "title": "Off (video only)",
-            "enum": [
-              "off"
-            ]
           }
         ],
-        "description": "Audio for the native cameras. The device's G.711 audio is transcoded by ffmpeg; needs libfdk_aac (AAC) or libopus (Opus) in your ffmpeg build — the Homebridge ffmpeg has both. Requires petkit-bridge v1.4.0 or newer with PETKIT_CAMERA_AUDIO=1."
+        "description": "Experimental. Adds the device's audio to the live view. The G.711 audio is transcoded by ffmpeg (needs libfdk_aac or libopus — the Homebridge ffmpeg has both) and requires petkit-bridge v1.4.0+ with PETKIT_CAMERA_AUDIO=1. On some setups enabling it makes the stream restart repeatedly in the Home app; if that happens, set it back to Off."
       },
       "ffmpegPath": {
         "title": "ffmpeg path",

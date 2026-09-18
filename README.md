@@ -38,7 +38,7 @@ Unsupported device types are skipped with a log line — open an issue with your
 
 ## Requirements
 
-- A running [petkit-bridge](https://github.com/raulhartzen/petkit-bridge) instance on your network
+- A running [petkit-bridge](https://github.com/raulhartzen/petkit-bridge) instance on your network — prebuilt Docker images are available, see its Quick start
 - Homebridge >= 1.6, Node.js >= 18
 
 ## Installation
@@ -48,6 +48,8 @@ From the Homebridge UI, search for `homebridge-petkit-bridge`, or:
 ```bash
 npm install -g homebridge-petkit-bridge
 ```
+
+Then open the plugin settings, enter the bridge URL and token, and press **Test connection**: the plugin contacts the bridge and lists the devices it found, so you know the two are talking before you save.
 
 ## Configuration
 

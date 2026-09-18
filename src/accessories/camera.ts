@@ -21,6 +21,7 @@ interface ActiveSession {
   audioSSRC: number;
   audioSRTP: string; // base64 key+salt
   process?: ChildProcess;
+  audioProcess?: ChildProcess;
 }
 
 /** Reserves a free UDP port by binding to 0 and releasing it. */
@@ -213,9 +214,12 @@ export class CameraAccessory implements CameraStreamingDelegate {
         const audioArgs = !wantAudio
           ? []
           : [
-              '-map', '0:a:0', '-vn', '-sn', '-dn',
+              '-hide_banner', '-loglevel', 'error',
+              '-rtsp_transport', 'tcp',
+              '-i', this.rtspUrl,
+              '-vn', '-sn', '-dn',
               ...audioEncode,
-              '-ac', '1',
+              '-ac', String(a.channel ?? 1),
               '-ar', `${a.sample_rate}k`,
               '-b:a', `${a.max_bit_rate}k`,
               '-payload_type', String(a.pt),
@@ -230,7 +234,7 @@ export class CameraAccessory implements CameraStreamingDelegate {
           '-hide_banner', '-loglevel', 'error',
           '-rtsp_transport', 'tcp',
           '-i', this.rtspUrl,
-          '-map', '0:v:0', '-an', '-sn', '-dn',
+          '-an', '-sn', '-dn',
           ...encode,
           '-payload_type', String(v.pt),
           '-ssrc', String(session.ssrc),
@@ -239,7 +243,6 @@ export class CameraAccessory implements CameraStreamingDelegate {
           '-srtp_out_params', session.videoSRTP,
           `srtp://${session.address}:${session.videoPort}` +
             `?rtcpport=${session.videoPort}&pkt_size=1316`,
-          ...audioArgs,
         ];
         this.platform.log.info(
           '[%s] starting stream (%dx%d, %s, audio: %s)',
@@ -248,7 +251,9 @@ export class CameraAccessory implements CameraStreamingDelegate {
         );
         const proc = spawn(this.platform.ffmpegPath, args, { env: process.env });
         proc.stderr?.on('data', (d: Buffer) => {
-          this.platform.log.debug('[%s] ffmpeg: %s',
+          // ffmpeg runs with -loglevel error, so anything here is a real
+          // problem: log it where the user can see it without debug mode.
+          this.platform.log.warn('[%s] ffmpeg: %s',
             this.accessory.displayName, d.toString().trim());
         });
         proc.on('error', (err) => {
@@ -267,11 +272,36 @@ export class CameraAccessory implements CameraStreamingDelegate {
           }
         });
         session.process = proc;
+
+        // Audio runs as its own ffmpeg process on purpose: sharing one
+        // process with the video means a stalling audio track blocks the
+        // video output too. go2rtc multiplexes both RTSP clients onto a
+        // single upstream session, so this does not open a second WHEP
+        // session towards the device.
+        if (wantAudio) {
+          const aproc = spawn(this.platform.ffmpegPath, audioArgs, { env: process.env });
+          aproc.stderr?.on('data', (d: Buffer) => {
+            this.platform.log.warn('[%s] ffmpeg (audio): %s',
+              this.accessory.displayName, d.toString().trim());
+          });
+          aproc.on('error', (err) => {
+            this.platform.log.error('[%s] audio ffmpeg failed to start (%s)',
+              this.accessory.displayName, String(err));
+          });
+          aproc.on('exit', (code, signal) => {
+            if (code !== null && code !== 0 && signal !== 'SIGKILL') {
+              this.platform.log.warn('[%s] audio ffmpeg exited (code %s)',
+                this.accessory.displayName, String(code));
+            }
+          });
+          session.audioProcess = aproc;
+        }
         callback();
         break;
       }
       case 'stop': {
         session?.process?.kill('SIGKILL');
+        session?.audioProcess?.kill('SIGKILL');
         this.sessions.delete(request.sessionID);
         this.platform.log.info('[%s] stream stopped', this.accessory.displayName);
         callback();

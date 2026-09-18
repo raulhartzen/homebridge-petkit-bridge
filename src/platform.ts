@@ -126,7 +126,8 @@ export class PetkitBridgePlatform implements DynamicPlatformPlugin {
     this.go2rtcRtspBase = `rtsp://${new URL(this.go2rtcUrl).hostname}:8554`;
     this.cameraVcodec = (config.cameraVcodec ?? '').trim() || 'copy';
     const audio = (config.cameraAudio ?? '').trim().toLowerCase();
-    this.cameraAudio = audio === 'opus' || audio === 'off' ? audio : 'aac';
+    // Default OFF: audio is experimental, see config.schema.json.
+    this.cameraAudio = audio === 'aac' || audio === 'opus' ? audio : 'off';
     this.ffmpegPath = (config.ffmpegPath ?? '').trim() || 'ffmpeg';
     this.client = new BridgeClient(bridgeUrl, token);
 
