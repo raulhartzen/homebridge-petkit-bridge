@@ -249,7 +249,9 @@ export class CameraAccessory implements CameraStreamingDelegate {
           this.accessory.displayName, v.width, v.height, vcodec,
           wantAudio ? `${a.codec} ${a.sample_rate}kHz` : 'off',
         );
-        const proc = spawn(this.platform.ffmpegPath, args, { env: process.env });
+        // The child process inherits the parent's environment by default, so
+        // nothing needs to be passed here.
+        const proc = spawn(this.platform.ffmpegPath, args);
         proc.stderr?.on('data', (d: Buffer) => {
           // ffmpeg runs with -loglevel error, so anything here is a real
           // problem: log it where the user can see it without debug mode.
@@ -279,7 +281,7 @@ export class CameraAccessory implements CameraStreamingDelegate {
         // single upstream session, so this does not open a second WHEP
         // session towards the device.
         if (wantAudio) {
-          const aproc = spawn(this.platform.ffmpegPath, audioArgs, { env: process.env });
+          const aproc = spawn(this.platform.ffmpegPath, audioArgs);
           aproc.stderr?.on('data', (d: Buffer) => {
             this.platform.log.warn('[%s] ffmpeg (audio): %s',
               this.accessory.displayName, d.toString().trim());

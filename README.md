@@ -49,7 +49,7 @@ From the Homebridge UI, search for `homebridge-petkit-bridge`, or:
 npm install -g homebridge-petkit-bridge
 ```
 
-Then open the plugin settings, enter the bridge URL and token, and press **Test connection**: the plugin contacts the bridge and lists the devices it found, so you know the two are talking before you save.
+Then open the plugin settings. If the bridge is already running on the same machine (or elsewhere on your LAN, on the default port), the plugin finds it and fills in the URL by itself — add the token and press **Test connection**: it contacts the bridge and lists the devices it found, so you know the two are talking before you save. If no bridge is found, the settings screen shows the commands to install one.
 
 ## Configuration
 

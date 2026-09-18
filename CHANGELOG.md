@@ -3,6 +3,39 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.2.0] - 2026-09-18
+
+### Added
+- Test connection now also checks the video half of the chain: whether go2rtc
+  is reachable and how many camera streams are registered on it. Enabling
+  cameras without a running go2rtc is reported straight away instead of only
+  showing up in the logs.
+- After a successful test, the settings screen lists what will actually be
+  created in the Home app — how many switches, sensors and cameras — and which
+  devices the configurable names apply to.
+
+### Changed
+- Camera streaming no longer passes the environment explicitly to ffmpeg (the
+  child process inherits it anyway); this also clears a false positive in
+  automated security scans.
+
+## [1.1.0] - 2026-09-18
+
+### Added
+- The settings screen now looks for a running bridge on this machine and on
+  its LAN addresses, and fills in the Bridge URL by itself. A **Search again**
+  button repeats the search.
+- When no bridge is found, the settings screen shows the commands to install
+  it, so there is no need to go looking for the documentation first.
+- A rejected token now explains where to find the right one (`BRIDGE_TOKEN` in
+  the bridge's `.env`), and an unreachable bridge says what to check.
+
+### Changed
+- The settings screen keeps the banner and the documentation links that the
+  standard form used to show, and presents the connection status and the
+  device list in a tidier layout.
+- The bridge token field is masked in the settings form.
+
 ## [1.0.0] - 2026-09-17
 
 First stable release: the configuration interface is considered settled and
